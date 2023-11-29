@@ -9,6 +9,7 @@ namespace Oscilliscope
         private string newPacket = "";
         private string sendPacket = "";
         const int samples = 32;
+        private float[] voltages = new float[samples];
 
         SerialPort serialPort = new SerialPort();
 
@@ -36,16 +37,15 @@ namespace Oscilliscope
 
         private void MyMainCodeThread()
         {
-
-        }
-        private void Button1_Clicked(object sender, EventArgs e)
-        {
-
-        }
-
-        private void Button2_Clicked(object sender, EventArgs e)
-        {
-
+            if(newPacket.Substring(0, 3) == "###")
+            {
+                int currPlace = 0;
+                for(int i = 6; i < (samples * 4); i += 4)
+                {
+                    voltages[currPlace] = Int32.Parse(newPacket.Substring(i, 4)) / 4096.0f;
+                    currPlace++;
+                }
+            }
         }
 
         private void BtnOpenClose_Clicked(object sender, EventArgs e)
