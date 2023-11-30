@@ -19,15 +19,14 @@
             </Grid.RowDefinitions>
             <StackLayout Grid.Row="0" Orientation="Horizontal">
                 <Button
-                    x:Name="BtnOpenClose"
-                    Text="Open"
-                    HorizontalOptions="Center"
-                    VerticalOptions="Start"
-                    Clicked="BtnOpenClose_Clicked">
+                    Text="{Binding comPortButtonText}"
+                    Command="{Binding OpenCloseCommand}">
                 </Button>
                 <Picker
                     x:Name="portPicker"
                     Title="Select ComPort"
+                    ItemsSource="{Binding comPorts}"
+                    ItemDisplayBinding="{Binding selectedPort}"
                     HorizontalOptions="Center"
                     VerticalOptions="Start">
                 </Picker>
