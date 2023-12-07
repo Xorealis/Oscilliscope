@@ -14,31 +14,59 @@
                 <ColumnDefinition Width="2*"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="1.5*"/>
                 <RowDefinition Height="10*"/>
             </Grid.RowDefinitions>
-            <StackLayout Grid.Row="0" Orientation="Horizontal">
+            <StackLayout Grid.Row="0" Orientation="Horizontal" Spacing="5">
                 <Button
-                    Text="{Binding comPortButtonText}"
+                    Text="{Binding ComPortButtonText}"
                     Command="{Binding OpenCloseCommand}">
                 </Button>
                 <Picker
                     x:Name="portPicker"
                     Title="Select ComPort"
-                    ItemsSource="{Binding comPorts}"
-                    ItemDisplayBinding="{Binding selectedPort}"
+                    ItemsSource="{Binding ComPorts}"
+                    SelectedItem="{Binding SelectedPort}"
                     HorizontalOptions="Center"
                     VerticalOptions="Start">
                 </Picker>
                 <Label
-                    Text="Trigger Level in mV:">
+                    Text="Frequency:"
+                    VerticalOptions="Center">
                 </Label>
-                <Entry
-                    x:Name="triggerVoltage"
-                    Text="0"
-                    HorizontalOptions="Center"
-                    VerticalOptions="Start">
-                </Entry>
+                <Label
+                    Text="{Binding FrequencyText}"
+                    VerticalOptions="Center">
+                </Label>
+                <Label
+                    Text="Pk-Pk:"
+                    VerticalOptions="Center">
+                </Label>
+                <Label
+                    Text="{Binding PeakText}"
+                    VerticalOptions="Center">
+                </Label>
+                <Label
+                    Text="Minimum Voltage:"
+                    VerticalOptions="Center">
+                </Label>
+                <Label
+                    Text="{Binding MinText}"
+                    VerticalOptions="Center">
+                </Label>
+                <Label
+                    Text="Maximum Voltage:"
+                    VerticalOptions="Center">                    
+                </Label>
+                <Label
+                    Text="{Binding MaxText}"
+                    VerticalOptions="Center">
+                </Label>
+            </StackLayout>
+            <StackLayout Grid.Row="1" Orientation="Horizontal">
+                <Label
+                    Text="{Binding NewPacket}">
+                </Label>
             </StackLayout>
             <lvc:CartesianChart Grid.Row ="1"
                 Series="{Binding Series}">
