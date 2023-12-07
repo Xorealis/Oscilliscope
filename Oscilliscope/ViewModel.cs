@@ -100,8 +100,8 @@ public partial class ViewModel : ObservableObject
             {
                 CurrentStatus = "Parsing Packet";
                 int currPlace = 0; //For keeping track of index
-                float currMax = -100; //Set to very low value to ensure proper comparison
-                float currMin = 100; //Set to high value to ensure proper comparison
+                float currMax = computeVoltage(Int32.Parse(NewPacket.Substring(6, 4)));// - 949.5f) * 0.11272f; //Set to very low value to ensure proper comparison
+                float currMin = computeVoltage(Int32.Parse(NewPacket.Substring(6, 4)));// - 949.5f) *0.11272f; //Set to high value to ensure proper comparison
 
                 //Iterates through the input packet in groups of 4
                 for (int i = 6; i < ((samples + 1) * 4); i += 4)
@@ -110,7 +110,7 @@ public partial class ViewModel : ObservableObject
                     try
                     {
                         //Generates an ObservablePoint with a Y value mapped to expected voltage from input data and X from expected sample time
-                        observableValues[currPlace].Y = map((Int32.Parse(NewPacket.Substring(i, 4))), 778, 1052, -9.4f, 23.2f) ;
+                        observableValues[currPlace].Y = computeVoltage(Int32.Parse(NewPacket.Substring(i, 4)));
                         observableValues[currPlace].X = currPlace * 0.025f;
 
                         //Determines largest and smallest Packet
@@ -234,9 +234,9 @@ public partial class ViewModel : ObservableObject
     }
 
     //Maps values in a certain range to another range
-    private static float map(int value, int fromLow, int fromHigh, float toLow, float toHigh)
+    private static float computeVoltage(int inVal)
     {
-        return ((float)value - (float)fromLow) * (toHigh - toLow) / ((float)fromHigh - (float)fromLow) + toLow;
+        return (inVal - 904f) * 0.11272f;
     }
 }
 
