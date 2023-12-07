@@ -19,10 +19,10 @@ public partial class ViewModel : ObservableObject
     private static ObservableCollection<ObservablePoint> observableValues = new ObservableCollection<ObservablePoint>();
     private bool bPortOpen = false;
     private string sendPacket = "";
-    const int samples = 32;
+    const int samples = 32; //Must be matched with "samples" variable in Firmware
     static double[] voltages = new double[samples];
-    Random random = new Random();
 
+    //The collection of datapoints to be graphed, size based on samples
     public ObservableCollection<ISeries> Series { get; set; } = new ObservableCollection<ISeries>
     {
         new LineSeries<ObservablePoint>
@@ -64,14 +64,19 @@ public partial class ViewModel : ObservableObject
     [ObservableProperty]
     string maxText = "0 V";
 
+    int checksumErrors = 0;
+
     SerialPort serialPort = new SerialPort();
 
     public ViewModel()
     {
+        //Generates some fake initial data
         for(int i = 0; i <samples; i++)
         {
             observableValues.Add(new ObservablePoint(i, 0));
         }
+
+        //Initializes Serial Port
         serialPort.BaudRate = 115200;
         serialPort.ReceivedBytesThreshold = 1;
         serialPort.DataReceived += SerialPort_DataReceived;
@@ -85,23 +90,30 @@ public partial class ViewModel : ObservableObject
 
     private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
     {
+        int checksum = 0;
         NewPacket = serialPort.ReadLine();
         CurrentStatus = "Packet Recieved";
         try
         {
-
+            //Determines if received packet starts with correct ###
             if (NewPacket.Substring(0, 3) == "###")
             {
                 CurrentStatus = "Parsing Packet";
-                int currPlace = 0;
-                float currMax = -100;
-                float currMin = 100;
+                int currPlace = 0; //For keeping track of index
+                float currMax = -100; //Set to very low value to ensure proper comparison
+                float currMin = 100; //Set to high value to ensure proper comparison
+
+                //Iterates through the input packet in groups of 4
                 for (int i = 6; i < ((samples + 1) * 4); i += 4)
                 {
+                    checksum += (byte)NewPacket[currPlace + 6];
                     try
                     {
+                        //Generates an ObservablePoint with a Y value mapped to expected voltage from input data and X from expected sample time
                         observableValues[currPlace].Y = map((Int32.Parse(NewPacket.Substring(i, 4))), 778, 1052, -9.4f, 23.2f) ;
                         observableValues[currPlace].X = currPlace * 0.025f;
+
+                        //Determines largest and smallest Packet
                         if (observableValues[currPlace].Y > currMax)
                         {
                             currMax = (float)observableValues[currPlace].Y;
@@ -117,10 +129,19 @@ public partial class ViewModel : ObservableObject
                     }
                     currPlace++;
                 };
+
+                checksum %= 1000;
+                if (checksum != Int32.Parse(NewPacket.Substring(((samples * 4) + 6), 4)))
+                {
+                    checksumErrors++;
+                }
+                //Writes to Data display
                 MaxText = currMax.ToString("0.00") + " V";
                 MinText = currMin.ToString("0.00") + " V";
                 PeakText = (currMax - currMin).ToString("0.00" + " Vpp");
 
+
+                //Determines period by finding two rising edges of roughly equivalent amplitude, then determines time between them
                 ObservablePoint temp1 = null;
                 ObservablePoint temp2 = null;
                 float period = 0;
@@ -144,6 +165,7 @@ public partial class ViewModel : ObservableObject
                     }
                     catch(Exception err) { }
                 }
+                //Writes frequency to data display
                 FrequencyText = (1f / period).ToString("0.0") + " Hz";
             }
         }
@@ -151,6 +173,8 @@ public partial class ViewModel : ObservableObject
         {
             CurrentStatus = "Error: " + err;
         }
+
+        //Sends Packet(If in Debug Virtual Data Mode)
         byte[] messageBytes = Encoding.UTF8.GetBytes(sendPacket);
         try
         {
@@ -190,6 +214,8 @@ public partial class ViewModel : ObservableObject
         }
     }
 
+    //Command currently inactive, sends signals to alternate between real and simulated data from board
+
     [RelayCommand]
     void Simulate()
     {
@@ -206,6 +232,8 @@ public partial class ViewModel : ObservableObject
             SimulatedButtonText = "Real";
         }
     }
+
+    //Maps values in a certain range to another range
     private static float map(int value, int fromLow, int fromHigh, float toLow, float toHigh)
     {
         return ((float)value - (float)fromLow) * (toHigh - toLow) / ((float)fromHigh - (float)fromLow) + toLow;
